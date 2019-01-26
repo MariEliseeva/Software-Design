@@ -1,4 +1,9 @@
-language: kotlin
+language: java
+
+jdk:
+  - oraclejdk8
+
 notifications:
   email: false
+
 script: for directory in */; do cd "${directory}" && ./gradlew check && cd ..; done
