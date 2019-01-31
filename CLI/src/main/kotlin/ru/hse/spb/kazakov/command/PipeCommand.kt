@@ -9,7 +9,7 @@ abstract class PipeCommand(private val prev: PipeCommand?) {
     /**
      * Returns command output.
      */
-    fun getOutput(): String = result.output.also { prev?.execute() }
+    fun getOutput(): String = result.output.also { prev?.result }
 
     /**
      * Returns all errors in pipe occurred so far.

@@ -287,6 +287,16 @@ class CliParserTest {
         assertTrue(command?.getErrors()?.isEmpty() ?: false)
     }
 
+    @Test
+    fun testRepeatedExecution(@TempDirectory.TempDir tempDir: Path) {
+        val file = createFile(tempDir, "file_name", "1 line\n 2line .")
+        val command = getCommands("echo 1 | wc $file fd | echo 3")
+        assertEquals("3", command?.getOutput())
+        assertIterableEquals(listOf("wc: fd: No such file"), command?.getErrors())
+        assertEquals("3", command?.getOutput())
+        assertIterableEquals(listOf("wc: fd: No such file"), command?.getErrors())
+    }
+
     private fun getCommands(input: String): PipeCommand? {
         val parser = CliParser()
         val lexer = CliLexer(CharStreams.fromString(input + '\n'))
