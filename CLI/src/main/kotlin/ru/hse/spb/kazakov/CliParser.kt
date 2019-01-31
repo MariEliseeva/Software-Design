@@ -101,14 +101,12 @@ class CliParser {
 
     private fun expandVariables(text: String): String {
         val expandingLexer = ExpandingLexer(CharStreams.fromString(text))
-        return expandingLexer.allTokens
-            .map { token ->
-                when (token.type) {
-                    ExpandingLexer.EXPANSION -> scope.getValue(token.text.drop(1))
-                    else -> token.text
-                }
+        return expandingLexer.allTokens.joinToString(separator = "") { token ->
+            when (token.type) {
+                ExpandingLexer.EXPANSION -> scope.getValue(token.text.drop(1))
+                else -> token.text
             }
-            .joinToString(separator = "")
+        }
     }
 
     private fun parseCommands() {
