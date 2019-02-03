@@ -5,10 +5,11 @@ import ru.hse.spb.kazakov.antlr.ThrowingExceptionListener
 import java.lang.IllegalArgumentException
 
 /**
- * Request-response cycle.x
+ * Request-response cycle.
  */
 fun main() {
     val lexer = CliLexer(CharStreams.fromString(""))
+    lexer.removeErrorListeners()
     lexer.addErrorListener(ThrowingExceptionListener())
     val parser = CliParser()
 

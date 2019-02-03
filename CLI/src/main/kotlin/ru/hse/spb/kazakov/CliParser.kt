@@ -3,7 +3,7 @@ package ru.hse.spb.kazakov
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.Token
 import ru.hse.spb.kazakov.CliLexer.*
-import ru.hse.spb.kazakov.command.PipeCommand
+import ru.hse.spb.kazakov.command.*
 
 /**
  * A class for parsing tokens produced by CLI lexer.
@@ -32,7 +32,7 @@ class CliParser {
         parseCommands()
 
         if (currentPosition != tokens.lastIndex) {
-            throw ParsingException("Error:(${currentToken.charPositionInLine}) unexpected token: ${currentToken.text}")
+            throw ParsingException("Error:(${currentToken.charPositionInLine + 1}) unexpected token: ${currentToken.text}")
         }
 
         return lastCommand
@@ -110,12 +110,13 @@ class CliParser {
     }
 
     private fun parseCommands() {
-        while (parseCommand()) {
+        parseCommand()
+        while (currentToken.type == PIPE) {
+            val pipeToken = currentToken
+            currentPosition++
             skipWS()
-            if (currentToken.type != PIPE) {
-                break
-            } else {
-                currentPosition++
+            if (!parseCommand()) {
+                throw ParsingException("Error:(${pipeToken.charPositionInLine + 1}) unexpected token: ${pipeToken.text}")
             }
             skipWS()
         }
@@ -136,7 +137,7 @@ class CliParser {
             argument = parseCommandCallPart()
         }
 
-        lastCommand = PipeCommand.buildCommand(name, arguments, lastCommand)
+        lastCommand = buildCommand(name, arguments, lastCommand)
         return true
     }
 
@@ -166,5 +167,15 @@ class CliParser {
 
         return expandVariables(stringBuilder.toString())
     }
+
+    private fun buildCommand(name: String, arguments: List<String>, previous: PipeCommand?) =
+        when (name) {
+            "cat" -> Cat(arguments, previous)
+            "echo" -> Echo(arguments, previous)
+            "wc" -> WC(arguments, previous)
+            "pwd" -> Pwd(previous)
+            "exit" -> Exit(previous)
+            else -> UserCommand(name, arguments, previous)
+        }
 }
 

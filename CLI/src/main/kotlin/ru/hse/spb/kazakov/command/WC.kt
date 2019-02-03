@@ -28,7 +28,10 @@ class WC(private val arguments: List<String>, prev: PipeCommand?) : PipeCommand(
 
     private fun wc(text: String): String {
         val linesNumber = text.lines().size
-        val wordsNumber = text.split(' ').size
+        val wordsNumber = text.dropWhile { it.isWhitespace() }
+            .dropLastWhile { it.isWhitespace() }
+            .split("\\s+".toRegex())
+            .size
         val bytesNumber = text.toByteArray().size
 
         return "$linesNumber $wordsNumber $bytesNumber"

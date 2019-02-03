@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.support.io.TempDirectory
+import ru.hse.spb.kazakov.antlr.ThrowingExceptionListener
 import ru.hse.spb.kazakov.command.*
 import java.io.File
 import java.nio.file.Path
@@ -187,6 +188,14 @@ class CliParserTest {
     }
 
     @Test
+    fun testWCMultipleWS() {
+        val command = getCommands("echo \"   .  []  ds      \" | wc")
+        assertTrue(command is WC)
+        assertEquals("1 3 18", command?.getOutput())
+        assertTrue(command?.getErrors()?.isEmpty() ?: false)
+    }
+
+    @Test
     fun testWCIgnoreStdin(@TempDirectory.TempDir tempDir: Path) {
         val file = createFile(tempDir, "file", "1 line\n 2line .")
         val command = getCommands("echo fdsf gfdg fdg | wc $file")
@@ -288,6 +297,18 @@ class CliParserTest {
     }
 
     @Test
+    fun testMissingQuote() {
+        val exception = assertThrows(ParsingException::class.java, { getCommands("echo \"") })
+        assertEquals("Error:(6) unexpected token: \"", exception.message)
+    }
+
+    @Test
+    fun testSinglePipe() {
+        val exception = assertThrows(ParsingException::class.java, { getCommands("echo hi |") })
+        assertEquals("Error:(9) unexpected token: |", exception.message)
+    }
+
+    @Test
     fun testRepeatedExecution(@TempDirectory.TempDir tempDir: Path) {
         val file = createFile(tempDir, "file_name", "1 line\n 2line .")
         val command = getCommands("echo 1 | wc $file fd | echo 3")
@@ -300,6 +321,8 @@ class CliParserTest {
     private fun getCommands(input: String): PipeCommand? {
         val parser = CliParser()
         val lexer = CliLexer(CharStreams.fromString(input + '\n'))
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(ThrowingExceptionListener())
         return parser.parseCommands(lexer.allTokens)
     }
 

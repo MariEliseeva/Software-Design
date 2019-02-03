@@ -16,5 +16,5 @@ class ThrowingExceptionListener : BaseErrorListener() {
         charPositionInLine: Int,
         msg: String,
         e: RecognitionException
-    ) = throw ParseCancellationException("Error:($charPositionInLine) $msg")
+    ) = throw ParseCancellationException("Error:(${charPositionInLine + 1}) $msg")
 }
