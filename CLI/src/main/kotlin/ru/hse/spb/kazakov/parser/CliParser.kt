@@ -1,12 +1,12 @@
-package ru.hse.spb.kazakov
+package ru.hse.spb.kazakov.parser
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.Token
 import ru.hse.spb.kazakov.CliLexer.*
-import ru.hse.spb.kazakov.command.*
+import ru.hse.spb.kazakov.ExpandingLexer
 
 /**
- * A class for parsing tokens produced by CLI lexer.
+ * A class for parsing tokens produced by [ru.hse.spb.kazakov.CliLexer].
  */
 class CliParser {
     private var tokens: List<Token> = emptyList()
@@ -15,13 +15,13 @@ class CliParser {
         get() = tokens[currentPosition]
     private val nextToken
         get() = tokens[currentPosition + 1]
-    private val scope = HashMap<String, String>().withDefault { "" }
-    private var lastCommand: PipeCommand? = null
+    private val assignments = mutableListOf<UnexpandedAssignment>()
+    private val commands = mutableListOf<UnexpandedCommand>()
 
     /**
-     * Returns parsed from [tokens] chain of commands.
+     * Returns parsed from [tokens] [ParsingResult].
      */
-    fun parseCommands(tokens: List<Token>): PipeCommand? {
+    fun parseCommands(tokens: List<Token>): ParsingResult {
         this.tokens = tokens
         reset()
 
@@ -35,12 +35,13 @@ class CliParser {
             throw ParsingException("Error:(${currentToken.charPositionInLine + 1}) unexpected token: ${currentToken.text}")
         }
 
-        return lastCommand
+        return ParsingResult(assignments, commands)
     }
 
     private fun reset() {
         currentPosition = 0
-        lastCommand = null
+        assignments.clear()
+        commands.clear()
     }
 
     private fun skipWS() {
@@ -53,39 +54,39 @@ class CliParser {
         if (currentToken.type == IDENTIFIER && nextToken.type == ASSIGN) {
             val variable = currentToken.text
             currentPosition += 2
-            val value = parseText()
-            scope[variable] = value
+            val value = parseUnexpandedString()
+            assignments.add(UnexpandedAssignment(variable, value))
             return true
         }
 
         return false
     }
 
-    private fun parseText(): String {
-        val stringBuilder = StringBuilder()
+    private fun parseUnexpandedString(): UnexpandedString {
+        val parts = mutableListOf<ExpansionPart>()
 
         while (currentToken.isTextPart()) {
-            stringBuilder.append(
-                when (currentToken.type) {
-                    WQ -> parseWeakQuoting()
-                    FQ -> parseFullQuoting()
-                    else -> parseWord()
-                }
-            )
+            parts.addAll(when (currentToken.type) {
+                WQ -> parseWeakQuoting()
+                FQ -> parseFullQuoting()
+                else -> parseWord()
+            })
+
         }
 
-        return stringBuilder.toString()
+        return UnexpandedString(parts)
     }
 
     private fun Token.isTextPart(): Boolean =
         type == WQ || type == FQ || isWordPart()
 
-    private fun parseWeakQuoting(): String =
+    private fun parseWeakQuoting(): List<ExpansionPart> =
         expandVariables(currentToken.text.drop(1).dropLast(1)).also { currentPosition++ }
 
-    private fun parseFullQuoting(): String = currentToken.text.drop(1).dropLast(1).also { currentPosition++ }
+    private fun parseFullQuoting(): List<ExpansionPart> =
+        listOf(ExpansionPart(currentToken.text.drop(1).dropLast(1), Type.STRING).also { currentPosition++ })
 
-    private fun parseWord(): String {
+    private fun parseWord(): List<ExpansionPart> {
         val stringBuilder = StringBuilder()
 
         while (currentToken.isWordPart()) {
@@ -99,18 +100,19 @@ class CliParser {
     private fun Token.isWordPart(): Boolean =
         type == WORD || type == ASSIGN || type == PIPE || type == EXPANSION || type == IDENTIFIER
 
-    private fun expandVariables(text: String): String {
+    private fun expandVariables(text: String): List<ExpansionPart> {
         val expandingLexer = ExpandingLexer(CharStreams.fromString(text))
-        return expandingLexer.allTokens.joinToString(separator = "") { token ->
+        return expandingLexer.allTokens.map { token ->
             when (token.type) {
-                ExpandingLexer.EXPANSION -> scope.getValue(token.text.drop(1))
-                else -> token.text
+                ExpandingLexer.EXPANSION -> ExpansionPart(token.text.drop(1), Type.EXPANSION)
+                else -> ExpansionPart(token.text, Type.STRING)
             }
         }
     }
 
     private fun parseCommands() {
         parseCommand()
+
         while (currentToken.type == PIPE) {
             val pipeToken = currentToken
             currentPosition++
@@ -124,40 +126,39 @@ class CliParser {
 
     private fun parseCommand(): Boolean {
         val name = parseCommandCallPart()
-        if (name == "") {
+        if (name.parts.isEmpty()) {
             return false
         }
 
-        val arguments = mutableListOf<String>()
+        val arguments = mutableListOf<UnexpandedString>()
         skipWS()
         var argument = parseCommandCallPart()
-        while (argument != "") {
+        while (argument.parts.isNotEmpty()) {
             arguments.add(argument)
             skipWS()
             argument = parseCommandCallPart()
         }
 
-        lastCommand = buildCommand(name, arguments, lastCommand)
+        commands.add(UnexpandedCommand(name, arguments))
         return true
     }
 
-    private fun parseCommandCallPart(): String {
-        val stringBuilder = StringBuilder()
+    private fun parseCommandCallPart(): UnexpandedString {
+        val parts = mutableListOf<ExpansionPart>()
 
         while (currentToken.isTextPart() && currentToken.type != PIPE) {
-            stringBuilder.append(
-                when (currentToken.type) {
-                    WQ -> parseWeakQuoting()
-                    FQ -> parseFullQuoting()
-                    else -> parseArgument()
-                }
-            )
+            parts.addAll(when (currentToken.type) {
+                WQ -> parseWeakQuoting()
+                FQ -> parseFullQuoting()
+                else -> parseArgument()
+            })
+
         }
 
-        return stringBuilder.toString()
+        return UnexpandedString(parts)
     }
 
-    private fun parseArgument(): String {
+    private fun parseArgument(): List<ExpansionPart> {
         val stringBuilder = StringBuilder()
 
         while (currentToken.isWordPart() && currentToken.type != PIPE) {
@@ -167,15 +168,5 @@ class CliParser {
 
         return expandVariables(stringBuilder.toString())
     }
-
-    private fun buildCommand(name: String, arguments: List<String>, previous: PipeCommand?) =
-        when (name) {
-            "cat" -> Cat(arguments, previous)
-            "echo" -> Echo(arguments, previous)
-            "wc" -> WC(arguments, previous)
-            "pwd" -> Pwd(previous)
-            "exit" -> Exit(previous)
-            else -> UserCommand(name, arguments, previous)
-        }
 }
 

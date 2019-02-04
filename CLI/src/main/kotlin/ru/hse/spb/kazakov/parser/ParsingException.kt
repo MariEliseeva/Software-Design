@@ -1,4 +1,4 @@
-package ru.hse.spb.kazakov
+package ru.hse.spb.kazakov.parser
 
 /**
  * Thrown when unable to parse given tokens list.

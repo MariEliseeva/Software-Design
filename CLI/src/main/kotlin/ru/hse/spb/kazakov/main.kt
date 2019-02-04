@@ -2,6 +2,8 @@ package ru.hse.spb.kazakov
 
 import org.antlr.v4.runtime.CharStreams
 import ru.hse.spb.kazakov.antlr.ThrowingExceptionListener
+import ru.hse.spb.kazakov.parser.CliParser
+import ru.hse.spb.kazakov.parser.ParsingException
 import java.lang.IllegalArgumentException
 
 /**
@@ -12,6 +14,7 @@ fun main() {
     lexer.removeErrorListeners()
     lexer.addErrorListener(ThrowingExceptionListener())
     val parser = CliParser()
+    val interpreter = CliInterpreter()
 
     while (true) {
         print("> ")
@@ -19,7 +22,8 @@ fun main() {
         lexer.inputStream = CharStreams.fromString(userInput + '\n')
 
         val commands = try {
-            parser.parseCommands(lexer.allTokens) ?: continue
+            val parseResult = parser.parseCommands(lexer.allTokens)
+            interpreter.interpret(parseResult) ?: continue
         } catch (exception: IllegalArgumentException) {
             println(exception.message)
             continue

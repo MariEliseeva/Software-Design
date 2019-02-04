@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.support.io.TempDirectory
 import ru.hse.spb.kazakov.antlr.ThrowingExceptionListener
 import ru.hse.spb.kazakov.command.*
+import ru.hse.spb.kazakov.parser.CliParser
+import ru.hse.spb.kazakov.parser.ParsingException
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -82,12 +84,17 @@ class CliParserTest {
 
     @Test
     fun testVariablesValuesStoring() {
-        val parser = CliParser()
         val lexer = CliLexer(CharStreams.fromString("x=3\n"))
-        parser.parseCommands(lexer.allTokens)
+        val parser = CliParser()
+        val interpreter = CliInterpreter()
+
+        var parsingResult = parser.parseCommands(lexer.allTokens)
+        interpreter.interpret(parsingResult)?.getOutput()
 
         lexer.inputStream = CharStreams.fromString("echo \$x\n")
-        val command = parser.parseCommands(lexer.allTokens)
+        parsingResult = parser.parseCommands(lexer.allTokens)
+        val command = interpreter.interpret(parsingResult)
+
         assertEquals("3", command?.getOutput())
         assertTrue(command?.getErrors()?.isEmpty() ?: false)
     }
@@ -319,11 +326,13 @@ class CliParserTest {
     }
 
     private fun getCommands(input: String): PipeCommand? {
-        val parser = CliParser()
         val lexer = CliLexer(CharStreams.fromString(input + '\n'))
+        val parser = CliParser()
+        val interpreter = CliInterpreter()
         lexer.removeErrorListeners()
         lexer.addErrorListener(ThrowingExceptionListener())
-        return parser.parseCommands(lexer.allTokens)
+        val parsingResult = parser.parseCommands(lexer.allTokens)
+        return interpreter.interpret(parsingResult)
     }
 
     private fun createFile(@TempDirectory.TempDir tempDir: Path, name: String, content: String): String {
