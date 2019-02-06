@@ -383,21 +383,21 @@ class CliParserTest {
     @Test
     fun testGrepAfterContext(@TempDirectory.TempDir tempDir: Path) {
         val content = "Filler .\n" +
-                "a match ..\n" +
-                "not_match\n" +
-                "not_match again\n" +
-                "not_match again again\n" +
-                "new match\n" +
-                "match again"
+                "a ma tch ..\n" +
+                "not_ma tch\n" +
+                "not_ma tch again\n" +
+                "not_ma tch again again\n" +
+                "new ma tch\n" +
+                "ma tch again"
         val file = createFile(tempDir, "file", content)
-        val command = getCommands("grep -w -A 2 match $file")
+        val command = getCommands("grep -w -A 2 'ma tch' $file")
         assertTrue(command is Grep)
         assertEquals(
-            "a match ..\n" +
-                    "not_match\n" +
-                    "not_match again\n" +
-                    "new match\n" +
-                    "match again", command?.getOutput()
+            "a ma tch ..\n" +
+                    "not_ma tch\n" +
+                    "not_ma tch again\n" +
+                    "new ma tch\n" +
+                    "ma tch again", command?.getOutput()
         )
         assertTrue(command?.getErrors()?.isEmpty() ?: false)
     }
