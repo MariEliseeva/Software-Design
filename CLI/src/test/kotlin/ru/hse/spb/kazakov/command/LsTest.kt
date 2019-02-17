@@ -29,7 +29,7 @@ class LsTest {
     fun executeTest3() {
         val currentDir = Paths.get("").toAbsolutePath().toString()
         val result = LsPublicExecute(Collections.singletonList("src" + File.separator + "main"), null, Directory(currentDir)).executePublic()
-        assertEquals(HashSet(Arrays.asList("kotlin", "antlr", "gen")), HashSet(result.split(" ")))
+        assertEquals(HashSet(Arrays.asList("kotlin", "antlr", "gen")), HashSet(result.split("\\s+".toRegex())))
     }
 
     inner class LsPublicExecute(arguments: List<String>, prev: PipeCommand?, currentDir: Directory): Ls(arguments, prev, currentDir) {
