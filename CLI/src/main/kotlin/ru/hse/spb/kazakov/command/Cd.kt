@@ -15,7 +15,11 @@ open class Cd(private val arguments: List<String>, prev: PipeCommand?, private v
         } else if (File(arguments[0]).exists() && File(arguments[0]).isAbsolute) {
             currentDir.setName(arguments[0])
         } else {
-            val newDirectory = currentDir.getName() + File.separator + arguments[0]
+            val newDirectory: String = if (currentDir.getName() != Directory.getRoot()) {
+                currentDir.getName() + File.separator + arguments[0]
+            } else {
+                currentDir.getName() + arguments[0]
+            }
             if (File(newDirectory).exists() && File(newDirectory).isDirectory) {
                 currentDir.setName(newDirectory)
             } else {

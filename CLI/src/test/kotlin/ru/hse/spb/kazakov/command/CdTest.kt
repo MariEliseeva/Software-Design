@@ -7,31 +7,30 @@ import ru.hse.spb.kazakov.Directory
 import java.io.File
 import java.nio.file.Paths
 import java.util.*
-import kotlin.collections.ArrayList
 
 class CdTest {
+    private val resourcesPath: String = Paths.get("").toAbsolutePath().toString() + File.separator + "src" +
+            File.separator + "test" + File.separator + "resources"
     @Test
     fun executeTest1() {
-        val currentDir = Paths.get("").toAbsolutePath().toString()
-        val dir = Directory(currentDir)
-        CdPublicExecute(Collections.singletonList("src"), null, dir).executePublic()
-        assertEquals(currentDir + File.separator + "src", dir.getName())
+        val dir = Directory(resourcesPath)
+        CdPublicExecute(Collections.singletonList("dir1"), null, dir).executePublic()
+        assertEquals(resourcesPath + File.separator + "dir1", dir.getName())
     }
 
     @Test
     fun executeTest2() {
-        val currentDir = Paths.get("").toAbsolutePath().toString()
-        val dir = Directory(currentDir)
-        CdPublicExecute(Collections.singletonList("src/.."), null, dir).executePublic()
-        assertEquals(currentDir, dir.getName())
+        val dir = Directory(resourcesPath)
+        CdPublicExecute(Collections.singletonList("dir1" + File.separator + "dir3"), null, dir).executePublic()
+        assertEquals(resourcesPath + File.separator + "dir1" + File.separator + "dir3", dir.getName())
     }
 
     @Test
     fun executeTest3() {
-        val currentDir = Paths.get("").toAbsolutePath().toString()
-        val dir = Directory(currentDir)
-        CdPublicExecute(ArrayList(), null, dir).executePublic()
-        assertEquals(System.getProperty("user.home"), dir.getName())
+        val dir = Directory(resourcesPath + File.separator + "dir2")
+        CdPublicExecute(Collections.singletonList(".." + File.separator + "dir1" + File.separator + "dir3" +
+                File.separator + ".."), null, dir).executePublic()
+        assertEquals(resourcesPath + File.separator + "dir1", dir.getName())
     }
 
     inner class CdPublicExecute(arguments: List<String>, prev: PipeCommand?, currentDir: Directory): Cd(arguments, prev, currentDir) {
