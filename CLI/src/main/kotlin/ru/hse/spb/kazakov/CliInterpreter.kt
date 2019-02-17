@@ -2,6 +2,8 @@ package ru.hse.spb.kazakov
 
 import ru.hse.spb.kazakov.command.*
 import ru.hse.spb.kazakov.parser.*
+import java.io.File
+import java.nio.file.Paths
 
 /**
  * A class for interpreting [ParsingResult] produced by [ru.hse.spb.kazakov.parser.CliParser].
@@ -9,6 +11,8 @@ import ru.hse.spb.kazakov.parser.*
 class CliInterpreter {
     private val scope = HashMap<String, String>().withDefault { "" }
     private var lastCommand: PipeCommand? = null
+    private var currentDir: Directory =
+        Directory(Paths.get("").toAbsolutePath().toString() + File.separator)
 
     /**
      * Returns interpreted from [parsingResult] chain of commands or null if there are no commands to interpret.
@@ -44,11 +48,13 @@ class CliInterpreter {
 
     private fun buildCommand(name: String, arguments: List<String>, previous: PipeCommand?) =
         when (name) {
-            "cat" -> Cat(arguments, previous)
+            "cat" -> Cat(arguments, previous, currentDir)
             "echo" -> Echo(arguments, previous)
-            "wc" -> WC(arguments, previous)
-            "pwd" -> Pwd(previous)
+            "wc" -> WC(arguments, previous, currentDir)
+            "pwd" -> Pwd(previous, currentDir)
             "exit" -> Exit(previous)
+            "cd" -> Cd(arguments, previous, currentDir)
+            "ls" -> Ls(arguments, previous, currentDir)
             else -> UserCommand(name, arguments, previous)
         }
 }

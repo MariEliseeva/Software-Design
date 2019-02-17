@@ -1,12 +1,17 @@
 package ru.hse.spb.kazakov.command
 
+import ru.hse.spb.kazakov.Directory
 import java.io.File
 import java.io.IOException
 
 /**
  * Representation of cat command.
  */
-class Cat(private val arguments: List<String>, prev: PipeCommand?) : PipeCommand(prev) {
+class Cat(
+    private val arguments: List<String>,
+    prev: PipeCommand?,
+    private val currentDir: Directory
+) : PipeCommand(prev) {
     override fun execute(): ExecutionResult {
         if (arguments.isEmpty()) {
             return ExecutionResult(getInput())
@@ -15,9 +20,9 @@ class Cat(private val arguments: List<String>, prev: PipeCommand?) : PipeCommand
         val errors = mutableListOf<String>()
         val output = arguments.joinToString(separator = "\n") {
             try {
-                File(it).readText()
+                File(currentDir.getName() + File.separator + it).readText()
             } catch (exception: IOException) {
-                errors.add("cat: $it: No such file")
+                errors.add("cat: " + currentDir.getName() + "$it: No such file")
                 ""
             }
         }

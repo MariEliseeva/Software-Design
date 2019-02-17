@@ -1,12 +1,17 @@
 package ru.hse.spb.kazakov.command
 
+import ru.hse.spb.kazakov.Directory
 import java.io.File
 import java.io.IOException
 
 /**
  * Representation of wc command.
  */
-class WC(private val arguments: List<String>, prev: PipeCommand?) : PipeCommand(prev) {
+class WC(
+    private val arguments: List<String>,
+    prev: PipeCommand?,
+    private val currentDir: Directory
+) : PipeCommand(prev) {
     override fun execute(): ExecutionResult {
         if (arguments.isEmpty()) {
             return ExecutionResult(wc(getInput()))
@@ -15,10 +20,10 @@ class WC(private val arguments: List<String>, prev: PipeCommand?) : PipeCommand(
         val errors = mutableListOf<String>()
         val output = arguments.mapNotNull {
             try {
-                val content = File(it).readText()
+                val content = File(currentDir.getName() + File.separator + it).readText()
                 wc(content)
             } catch (exception: IOException) {
-                errors.add("wc: $it: No such file")
+                errors.add("wc: " + currentDir.getName() + "$it: No such file")
                 null
             }
         }.joinToString(separator = "\n")
