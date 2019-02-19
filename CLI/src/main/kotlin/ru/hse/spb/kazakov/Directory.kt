@@ -45,10 +45,10 @@ class Directory(private var directoryName: String) {
         return dirName
     }
 
-    /**
-     * Returns root directory name.
-     */
     companion object {
+        /**
+         * Returns root directory name.
+         */
         fun getRoot(): String {
             val operationSystem = (System.getProperty("os.name")).toUpperCase()
             if (operationSystem.contains("WIN")) {
@@ -57,6 +57,9 @@ class Directory(private var directoryName: String) {
             return "/"
         }
 
+        /**
+         * Checks if a given name is a directory name.
+         */
         fun isDir(name: String): Boolean {
             return File(name).exists() && File(name).isDirectory
         }
