@@ -23,7 +23,7 @@ class WC(
                 val content = File(currentDir.getName() + File.separator + it).readText()
                 wc(content)
             } catch (exception: IOException) {
-                errors.add("wc: " + currentDir.getName() + "$it: No such file")
+                errors.add("wc: " + currentDir.getName() + File.separator + "$it: No such file")
                 null
             }
         }.joinToString(separator = "\n")
