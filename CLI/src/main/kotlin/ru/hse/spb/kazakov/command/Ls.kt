@@ -6,21 +6,24 @@ import java.util.*
 
 /**
  * Class representing ls command. Take 0 or 1 arguments, if 0 given prints current directory content, if 1 prints given
- * directory content.
+ * directory content. If more then one arguments passed -- ignores others.
  */
-open class Ls(private val arguments: List<String>, previous: PipeCommand?, private val currentDir: Directory) : PipeCommand(previous) {
+class Ls(private val arguments: List<String>, previous: PipeCommand?, private val currentDir: Directory) : PipeCommand(previous) {
     override fun execute(): ExecutionResult {
         if (arguments.isEmpty()) {
-            return ExecutionResult(File(currentDir.getName()).list().joinToString(separator = " "))
-        } else if (File(arguments[0]).exists() && File(arguments[0]).isAbsolute) {
-            return ExecutionResult(File(arguments[0]).list().joinToString(separator = " "))
+            return getLsResult(currentDir.getName())
+        } else if (Directory.isDir(arguments[0]) && File(arguments[0]).isAbsolute) {
+            return getLsResult(arguments[0])
         } else {
             val newDirectory = currentDir.getName() + File.separator + arguments[0]
-            if (File(newDirectory).exists() && File(newDirectory).isDirectory) {
-                return ExecutionResult(File(newDirectory).list().joinToString(separator = " "))
+            if (Directory.isDir(newDirectory)) {
+                return getLsResult(newDirectory)
             }
             return ExecutionResult("", Collections.singletonList("ls: " + arguments[0] + ": No such directory"))
         }
     }
 
+    private fun getLsResult(dir: String): ExecutionResult {
+        return ExecutionResult(File(dir).list().joinToString(separator = " "))
+    }
 }

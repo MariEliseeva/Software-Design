@@ -56,5 +56,9 @@ class Directory(private var directoryName: String) {
             }
             return "/"
         }
+
+        fun isDir(name: String): Boolean {
+            return File(name).exists() && File(name).isDirectory
+        }
     }
 }

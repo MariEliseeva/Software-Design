@@ -16,24 +16,21 @@ class LsTest {
 
     @Test
     fun executeTest1() {
-        val result = LsPublicExecute(ArrayList(), null, Directory(resourcesPath)).executePublic()
-        assertEquals(HashSet(Arrays.asList("dir1", "dir2")), HashSet(result.split("\\s+".toRegex())))
+        val ls = Ls(ArrayList(), null, Directory(resourcesPath))
+        assertEquals(HashSet(Arrays.asList("dir1", "dir2")),
+            HashSet(ls.getOutput().split("\\s+".toRegex())))
     }
 
     @Test
     fun executeTest2() {
-        val result = LsPublicExecute(Collections.singletonList("blablabla"), null, Directory(resourcesPath)).executePublicErrors()
-        assertEquals("ls: blablabla: No such directory", result[0])
+        val ls = Ls(Collections.singletonList("blablabla"), null, Directory(resourcesPath))
+        assertEquals("ls: blablabla: No such directory", ls.getErrors()[0])
     }
 
     @Test
     fun executeTest3() {
-        val result = LsPublicExecute(Collections.singletonList("dir1"), null, Directory(resourcesPath)).executePublic()
-        assertEquals(HashSet(Collections.singletonList("dir3")), HashSet(Collections.singletonList(result)))
-    }
-
-    inner class LsPublicExecute(arguments: List<String>, prev: PipeCommand?, currentDir: Directory): Ls(arguments, prev, currentDir) {
-        fun executePublic() = execute().output
-        fun executePublicErrors() = execute().errors
+        val ls = Ls(Collections.singletonList("dir1"), null, Directory(resourcesPath))
+        assertEquals(HashSet(Collections.singletonList("dir3")),
+            HashSet(Collections.singletonList(ls.getOutput())))
     }
 }

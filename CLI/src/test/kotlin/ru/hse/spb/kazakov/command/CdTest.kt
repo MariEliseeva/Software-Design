@@ -14,28 +14,22 @@ class CdTest {
     @Test
     fun executeTest1() {
         val dir = Directory(resourcesPath)
-        CdPublicExecute(Collections.singletonList("dir1"), null, dir).executePublic()
+        Cd(Collections.singletonList("dir1"), null, dir).getOutput()
         assertEquals(resourcesPath + File.separator + "dir1", dir.getName())
     }
 
     @Test
     fun executeTest2() {
         val dir = Directory(resourcesPath)
-        CdPublicExecute(Collections.singletonList("dir1" + File.separator + "dir3"), null, dir).executePublic()
+        Cd(Collections.singletonList("dir1" + File.separator + "dir3"), null, dir).getOutput()
         assertEquals(resourcesPath + File.separator + "dir1" + File.separator + "dir3", dir.getName())
     }
 
     @Test
     fun executeTest3() {
         val dir = Directory(resourcesPath + File.separator + "dir2")
-        CdPublicExecute(Collections.singletonList(".." + File.separator + "dir1" + File.separator + "dir3" +
-                File.separator + ".."), null, dir).executePublic()
+        Cd(Collections.singletonList(".." + File.separator + "dir1" + File.separator + "dir3" +
+                File.separator + ".."), null, dir).getOutput()
         assertEquals(resourcesPath + File.separator + "dir1", dir.getName())
-    }
-
-    inner class CdPublicExecute(arguments: List<String>, prev: PipeCommand?, currentDir: Directory): Cd(arguments, prev, currentDir) {
-        fun executePublic() {
-            execute()
-        }
     }
 }
