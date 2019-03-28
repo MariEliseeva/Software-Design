@@ -1,6 +1,8 @@
 package ru.hse.spb.kazakov.command
 
 import org.openqa.selenium.os.ExecutableFinder
+import ru.hse.spb.kazakov.Environment
+import java.io.File
 
 /**
  * Representation of a user command.
@@ -8,13 +10,13 @@ import org.openqa.selenium.os.ExecutableFinder
 class UserCommand(
     private val name: String,
     private val arguments: List<String>,
-    prev: PipeCommand?
-) : PipeCommand(prev) {
+    private val environment: Environment
+) : PipeCommand(environment.getLastCommand()) {
 
     override fun execute(): ExecutionResult =
         if (ExecutableFinder().find(name) != null) {
             val commandCall = name + ' ' + arguments.joinToString(separator = " ")
-            val process = Runtime.getRuntime().exec(commandCall)
+            val process = Runtime.getRuntime().exec(commandCall, null, File(environment.getCurrentDir()))
 
             process.outputStream.bufferedWriter().use { it.write(getInput()) }
             val output = process.inputStream.bufferedReader().use { it.readText() }
@@ -24,6 +26,4 @@ class UserCommand(
         } else {
             ExecutionResult("", listOf("$name: command not found"))
         }
-
-
 }

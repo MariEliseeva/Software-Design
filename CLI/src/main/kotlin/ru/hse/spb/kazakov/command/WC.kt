@@ -1,6 +1,6 @@
 package ru.hse.spb.kazakov.command
 
-import ru.hse.spb.kazakov.Directory
+import ru.hse.spb.kazakov.Environment
 import java.io.File
 import java.io.IOException
 
@@ -9,9 +9,8 @@ import java.io.IOException
  */
 class WC(
     private val arguments: List<String>,
-    prev: PipeCommand?,
-    private val currentDir: Directory
-) : PipeCommand(prev) {
+    private val environment: Environment
+) : PipeCommand(environment.getLastCommand()) {
     override fun execute(): ExecutionResult {
         if (arguments.isEmpty()) {
             return ExecutionResult(wc(getInput()))
@@ -20,10 +19,14 @@ class WC(
         val errors = mutableListOf<String>()
         val output = arguments.mapNotNull {
             try {
-                val content = File(currentDir.getName() + File.separator + it).readText()
+                val content = if (File(it).isAbsolute) {
+                    File(it).readText()
+                } else {
+                    File(environment.getCurrentDir() + File.separator + it).readText()
+                }
                 wc(content)
             } catch (exception: IOException) {
-                errors.add("wc: " + currentDir.getName() + "$it: No such file")
+                errors.add("wc: $it: No such file")
                 null
             }
         }.joinToString(separator = "\n")
