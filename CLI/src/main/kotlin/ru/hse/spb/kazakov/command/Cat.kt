@@ -1,7 +1,6 @@
 package ru.hse.spb.kazakov.command
 
 import ru.hse.spb.kazakov.Environment
-import java.io.File
 import java.io.IOException
 
 /**
@@ -19,11 +18,7 @@ class Cat(
         val errors = mutableListOf<String>()
         val output = arguments.joinToString(separator = "\n") {
             try {
-                if (File(it).isAbsolute) {
-                    File(it).readText()
-                } else {
-                    File(environment.getCurrentDir() + File.separator + it).readText()
-                }
+                environment.currentDir.resolve(it).toFile().readText()
             } catch (exception: IOException) {
                 errors.add("cat: $environment.getCurrentDir()$it: No such file")
                 ""

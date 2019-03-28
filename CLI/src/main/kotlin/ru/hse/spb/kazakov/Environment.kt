@@ -8,7 +8,10 @@ import java.util.*
 class Environment {
     private val scope = HashMap<String, String>().withDefault { "" }
     private var lastCommand: PipeCommand? = null
-    private var currentDir: Path = Paths.get("").toAbsolutePath()
+    var currentDir: Path = Paths.get("").toAbsolutePath()
+        set(value) {
+            field = value.normalize()
+        }
 
     fun getLastCommand(): PipeCommand? {
         return lastCommand
@@ -28,13 +31,5 @@ class Environment {
 
     fun getVariableValue(variableName: String): CharSequence {
         return scope.getValue(variableName)
-    }
-
-    fun getCurrentDir(): String {
-        return currentDir.toString()
-    }
-
-    fun setCurrentDir(newDir: Path) {
-        currentDir = newDir.normalize()
     }
 }

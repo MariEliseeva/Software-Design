@@ -6,10 +6,8 @@ import org.junit.Assert.*
 import org.junit.Before
 import ru.hse.spb.kazakov.Environment
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 class LsTest {
@@ -17,14 +15,13 @@ class LsTest {
 
     @Before
     fun init() {
-        val resourcesPath: Path = Paths.get(Paths.get("").toAbsolutePath().toString() + File.separator +
+        environment.currentDir = Paths.get(Paths.get("").toAbsolutePath().toString() + File.separator +
                 "src" + File.separator + "test" + File.separator + "resources")
-        environment.setCurrentDir(resourcesPath)
     }
 
     @Test
     fun executeTest1() {
-        val ls = Ls(ArrayList(), environment)
+        val ls = Ls(Collections.emptyList(), environment)
         assertEquals(HashSet(Arrays.asList("dir1", "dir2")),
             HashSet(ls.getOutput().split("\\s+".toRegex())))
     }
@@ -38,8 +35,8 @@ class LsTest {
     @Test
     fun executeTest3() {
         val ls = Ls(Collections.singletonList("dir1"), environment)
-        assertEquals(HashSet(Collections.singletonList("dir3")),
-            HashSet(Collections.singletonList(ls.getOutput())))
+        assertEquals(Collections.singletonList("dir3"),
+            Collections.singletonList(ls.getOutput()))
     }
 
     @Test

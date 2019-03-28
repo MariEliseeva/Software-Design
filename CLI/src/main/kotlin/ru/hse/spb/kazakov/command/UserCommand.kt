@@ -16,7 +16,7 @@ class UserCommand(
     override fun execute(): ExecutionResult =
         if (ExecutableFinder().find(name) != null) {
             val commandCall = name + ' ' + arguments.joinToString(separator = " ")
-            val process = Runtime.getRuntime().exec(commandCall, null, File(environment.getCurrentDir()))
+            val process = Runtime.getRuntime().exec(commandCall, null, File(environment.currentDir.toString()))
 
             process.outputStream.bufferedWriter().use { it.write(getInput()) }
             val output = process.inputStream.bufferedReader().use { it.readText() }

@@ -3,6 +3,7 @@ package ru.hse.spb.kazakov.command
 import ru.hse.spb.kazakov.Environment
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 
@@ -12,20 +13,16 @@ import java.util.*
  */
 class Ls(private val arguments: List<String>, private val environment: Environment) : PipeCommand(environment.getLastCommand()) {
     override fun execute(): ExecutionResult {
-        if (arguments.isEmpty()) {
-            return getLsResult(environment.getCurrentDir())
+        return if (arguments.isEmpty()) {
+            getLsResult(environment.currentDir.toString())
         } else if (arguments.size > 1) {
-            return ExecutionResult("", Collections.singletonList("ls: Too many arguments."))
+            ExecutionResult("", Collections.singletonList("ls: Too many arguments."))
         } else {
-            var path = Paths.get(arguments[0])
-            if (Files.isDirectory(path) && path.isAbsolute) {
-                return getLsResult(arguments[0])
+            val path: Path = environment.currentDir.resolve(Paths.get(arguments[0]))
+            if (Files.isDirectory(path)) {
+                getLsResult(path.toString())
             } else {
-                path = Paths.get(environment.getCurrentDir() + File.separator + arguments[0])
-                if (Files.isDirectory(path)) {
-                    return getLsResult(path.toString())
-                }
-                return ExecutionResult("", Collections.singletonList("ls: " + arguments[0] + ": No such directory"))
+                ExecutionResult("", Collections.singletonList("ls: " + arguments[0] + ": No such directory"))
             }
         }
     }

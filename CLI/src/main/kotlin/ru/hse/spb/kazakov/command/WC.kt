@@ -1,7 +1,6 @@
 package ru.hse.spb.kazakov.command
 
 import ru.hse.spb.kazakov.Environment
-import java.io.File
 import java.io.IOException
 
 /**
@@ -19,12 +18,7 @@ class WC(
         val errors = mutableListOf<String>()
         val output = arguments.mapNotNull {
             try {
-                val content = if (File(it).isAbsolute) {
-                    File(it).readText()
-                } else {
-                    File(environment.getCurrentDir() + File.separator + it).readText()
-                }
-                wc(content)
+                wc(environment.currentDir.resolve(it).toFile().readText())
             } catch (exception: IOException) {
                 errors.add("wc: $it: No such file")
                 null
